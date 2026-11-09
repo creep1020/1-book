@@ -25,7 +25,10 @@ button{cursor:pointer}button:disabled{opacity:.4;cursor:default}.primary{backgro
 .calendar-grid div{font-size:12px;padding:8px 0}.dow{color:var(--muted)}.calday{background:#faf8f3;border-radius:9px;min-height:38px;display:flex;flex-direction:column;justify-content:center;align-items:center}
 .calday.done{background:#dcebd9;color:#285437;font-weight:800}.calday.today{outline:2px solid var(--accent)}
 .small{font-size:12px;color:var(--muted);line-height:1.55}.foot{margin-top:20px}
-.item-main{min-width:0}.item-text{display:block}.item-tools{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:13px}.item-tools label{display:flex;align-items:center;gap:6px;color:var(--muted)}.item-tools input{width:18px;height:18px;accent-color:var(--accent);padding:0}.review-btn{padding:5px 9px;font-size:12px;border-radius:9px}.speak-btn{padding:5px 9px;font-size:12px;border-radius:9px;background:#edf3eb;border-color:#cbd9c8;color:#31543a}.review-btn.saved{background:#fff1df;border-color:#e6b76c;color:#80500b}.filterbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}.filterbar button.active{background:var(--accent);color:#fff;border-color:var(--accent)}.item-count{font-size:12px;color:var(--muted);margin-left:auto}.record-btn{padding:6px 10px;font-size:12px;border-radius:9px;background:#fff1f0;border-color:#e5b8b3;color:#8b332b}.record-result{display:none;margin-top:9px;padding:10px;border-radius:10px;background:#f5f3ed;font-size:12px;line-height:1.55}.record-result.show{display:block}.record-audio{display:block;width:100%;height:38px;margin-top:7px}
+.item-main{min-width:0}.item-text{display:block} .item-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px;font-size:13px}.item-tools button,.item-tools label{width:100%;min-width:0;min-height:38px;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 8px;font-size:12px;line-height:1.25;border-radius:9px;white-space:normal;text-align:center}.item-tools label{border:1px solid var(--line);background:#faf9f6;color:var(--muted)}.item-tools input{width:17px;height:17px;flex:0 0 auto;accent-color:var(--accent);padding:0;margin:0}.review-btn{font-size:12px}.speak-btn{background:#edf3eb;border-color:#cbd9c8;color:#31543a}.review-btn.saved{background:#fff1df;border-color:#e6b76c;color:#80500b}.filterbar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}.filterbar button.active{background:var(--accent);color:#fff;border-color:var(--accent)}.item-count{font-size:12px;color:var(--muted);margin-left:auto}.record-btn{padding:6px 10px;font-size:12px;border-radius:9px;background:#fff1f0;border-color:#e5b8b3;color:#8b332b}.record-result{display:none;margin-top:9px;padding:10px;border-radius:10px;background:#f5f3ed;font-size:12px;line-height:1.55}.record-result.show{display:block}.record-audio{display:block;width:100%;height:38px;margin-top:7px}
+
+.reward-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.reward-main,.reward-streak{padding:13px;border-radius:13px;background:#f7f5ef}.reward-number{font-size:30px;font-weight:850;color:#a66a12;line-height:1.25;margin:4px 0}.streak-number{font-size:25px;font-weight:850;color:#c05b27;line-height:1.4;margin:4px 0}.badge-title{font-size:13px;font-weight:800;margin:16px 0 8px}.badge-list{display:flex;flex-wrap:wrap;gap:7px}.earned-badge,.locked-badge{padding:7px 10px;border-radius:999px;font-size:12px;border:1px solid #ead9ad;background:#fff8e6;color:#775318}.locked-badge{border-color:var(--line);background:#f7f6f2;color:#9a948a}.reward-options{display:grid;grid-template-columns:1fr;gap:8px}.reward-option{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid var(--line);border-radius:11px;background:#fff}.reward-option .reward-desc{min-width:0;font-size:13px;line-height:1.4}.reward-option button{flex:0 0 auto;padding:7px 10px;font-size:12px}.reward-option button:disabled{opacity:.45}.approve-reward{margin-top:7px;padding:7px 10px;font-size:12px;background:#edf3eb;border-color:#cbd9c8;color:#31543a}
+@media(min-width:560px){.item-tools{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style></head>
 <body><main>
 <header><div><div class="kicker">ILPPANGPPANG · BASIC ENGLISH</div><strong>매일 30문장, 20일 완성</strong></div><div class="day" id="dayBadge">DAY 1 / 20</div></header>
@@ -41,6 +44,17 @@ button{cursor:pointer}button:disabled{opacity:.4;cursor:default}.primary{backgro
 <section class="panel">
 <div class="actions"><button class="primary" id="markDone">✓ 오늘 학습 완료</button><button id="undoDone">완료 취소</button></div>
 <div class="status" id="studyStatus">학습을 마친 뒤 완료 버튼을 눌러 기록하세요.</div>
+</section>
+<section class="panel" id="rewardPanel">
+<strong style="font-size:14px">⭐ 나의 학습 보상</strong>
+<div class="reward-stats">
+ <div class="reward-main"><div class="small">사용 가능한 별 포인트</div><div class="reward-number"><span id="starBalance">0</span> ⭐</div><div class="small" id="starNote">오늘 학습을 완료하면 별 1개를 받을 수 있어요.</div></div>
+ <div class="reward-streak"><div class="small">연속 학습</div><div class="streak-number">🔥 <span id="streakCount">0</span>일</div><div class="small" id="streakNote">하루씩 꾸준히 이어가 봐요!</div></div>
+</div>
+<div class="badge-title">획득한 배지</div><div class="badge-list" id="badgeList"></div>
+<div class="badge-title">🎁 별 포인트 보상</div>
+<div class="reward-options" id="rewardOptions"></div>
+<div class="small" id="rewardStatus" aria-live="polite" style="margin-top:9px">보상은 별을 모아 부모님과 함께 확인하고 받아요.</div>
 </section>
 <section class="panel" id="backupPanel">
 <strong style="font-size:14px">💾 학습 기록 백업 · 복원</strong>
@@ -74,6 +88,28 @@ function selectedDate(){return previewDay===null?iso(today):null}
 let listMode='all';
 function readMap(name){try{return JSON.parse(localStorage.getItem(name)||'{}')}catch(e){return {}}}
 function writeMap(name,obj){localStorage.setItem(name,JSON.stringify(obj))}
+const REWARD_KEY='ilbbang600StarAwards',REDEEM_KEY='ilbbang600RewardRequests';
+const REWARDS=[{id:'snack',cost:5,title:'작은 간식 고르기',desc:'좋아하는 간식 하나를 부모님과 골라요.'},{id:'play',cost:10,title:'가족 놀이 선택권',desc:'주말에 함께 할 놀이를 직접 골라요.'},{id:'outing',cost:20,title:'특별한 가족 활동',desc:'가고 싶은 곳이나 함께 할 활동을 정해요.'}];
+function studyDates(){return [...new Set(Object.keys(readRecords()).filter(k=>readRecords()[k]===true).map(k=>k.split('|')[0]))].sort();}
+function currentStreak(){const dates=new Set(studyDates());let d=new Date(today);if(!dates.has(iso(d))){d.setDate(d.getDate()-1);if(!dates.has(iso(d)))return 0;}let n=0;while(dates.has(iso(d))){n++;d.setDate(d.getDate()-1);}return n;}
+function bestStreak(){const ds=studyDates();let best=0,run=0,prev=null;for(const value of ds){const d=new Date(value+'T00:00:00');if(prev){const gap=(d-prev)/86400000;run=gap===1?run+1:1;}else run=1;best=Math.max(best,run);prev=d;}return best;}
+function starAwards(){return readMap(REWARD_KEY)}
+function redeemedRequests(){return readMap(REDEEM_KEY)}
+function availableStars(){const awards=starAwards(),spent=redeemedRequests();return Object.keys(awards).filter(k=>awards[k]).length-Object.values(spent).filter(x=>x&&x.status==='approved').reduce((a,x)=>a+(Number(x.cost)||0),0);}
+function awardToday(){const k=key(iso(today),currentDay()),awards=starAwards();if(!awards[k]){awards[k]=true;writeMap(REWARD_KEY,awards);}}
+function renderRewards(){
+ const streak=currentStreak(),best=bestStreak(),balance=Math.max(0,availableStars());
+ $('starBalance').textContent=balance;$('streakCount').textContent=streak;
+ $('starNote').textContent=readRecords()[key(iso(today),currentDay())]?'오늘의 별을 받았어요!':'오늘 학습을 완료하면 별 1개를 받아요.';
+ $('streakNote').textContent=streak>=7?'대단해요! 7일 연속 학습을 달성했어요.':streak>0?`다음 7일 배지까지 ${7-streak}일 남았어요.`:'오늘 공부를 시작해 연속 기록을 만들어 봐요!';
+ const milestones=[{n:1,label:'첫걸음 배지 🐣'},{n:3,label:'3일 꾸준 배지 🌱'},{n:7,label:'일주일 배지 🏅'},{n:14,label:'2주 도전 배지 🏆'},{n:20,label:'20일 완주 배지 👑'}];
+ $('badgeList').innerHTML=milestones.map(b=>`<span class="${best>=b.n?'earned-badge':'locked-badge'}">${best>=b.n?'✓ ':'🔒 '}${b.label}</span>`).join('');
+ const requests=redeemedRequests();
+ $('rewardOptions').innerHTML=REWARDS.map(r=>{const pending=Object.values(requests).some(x=>x&&x.rewardId===r.id&&x.status==='pending');return `<div class="reward-option"><div class="reward-desc"><strong>${r.title}</strong><br><span class="small">${r.desc} · ${r.cost}⭐</span></div><button data-reward="${r.id}" ${balance<r.cost||pending?'disabled':''}>${pending?'요청 대기 중':'보상 요청'}</button></div>`}).join('');
+ const pending=Object.values(requests).filter(x=>x&&x.status==='pending');
+ $('rewardStatus').innerHTML=pending.length?`부모님이 실제 보상을 준 뒤 아래 버튼을 눌러 확인해 주세요.<br>${pending.map(x=>`<button class="approve-reward" data-approve="${Object.keys(requests).find(k=>requests[k]===x)}">${x.title} · ${x.cost}⭐ 부모님 확인</button>`).join(' ')}`:'보상은 별을 모아 부모님과 함께 확인하고 받아요. 별은 부모님 확인 후 차감돼요.';
+}
+
 // 무료 기기 내장 TTS 사용. 영어(미국) 음성 중 남성으로 추정되는 음성을 자동 우선 선택.
 let availableVoices=[];
 function isEnglishVoice(v){return /^en(-|_)/i.test(v.lang||'')}
@@ -155,6 +191,8 @@ function render(){
  $('undoDone').disabled=previewDay!==null||!done;
  $('studyStatus').textContent=previewDay!==null?'미리보기 중입니다. 오늘의 DAY 화면에서 학습 기록을 저장할 수 있어요.':done?'오늘 학습 완료 기록이 저장되어 있어요. 달력에서 확인할 수 있습니다.':'학습을 마친 뒤 완료 버튼을 눌러 기록하세요.';
  renderCalendar();
+ if(previewDay===null&&readRecords()[key(iso(today),currentDay())])awardToday();
+ renderRewards();
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function renderCalendar(){
@@ -175,7 +213,7 @@ $('daySelect').onchange=()=>{previewDay=Number($('daySelect').value);render()};
 $('koreanBtn').onclick=()=>{viewMode='ko';render()};
 $('englishBtn').onclick=()=>{viewMode='en';render()};
 $('bothBtn').onclick=()=>{viewMode='both';render()};
-$('markDone').onclick=()=>{if(previewDay!==null)return;let r=readRecords();r[key(iso(today),currentDay())]=true;localStorage.setItem('ilbbang600Records',JSON.stringify(r));render()};
+$('markDone').onclick=()=>{if(previewDay!==null)return;let r=readRecords();r[key(iso(today),currentDay())]=true;localStorage.setItem('ilbbang600Records',JSON.stringify(r));awardToday();render()};
 $('undoDone').onclick=()=>{if(previewDay!==null)return;let r=readRecords();delete r[key(iso(today),currentDay())];localStorage.setItem('ilbbang600Records',JSON.stringify(r));render()};
 $('prevMonth').onclick=()=>{calendarDate=new Date(calendarDate.getFullYear(),calendarDate.getMonth()-1,1);renderCalendar()};
 $('nextMonth').onclick=()=>{calendarDate=new Date(calendarDate.getFullYear(),calendarDate.getMonth()+1,1);renderCalendar()};
@@ -187,7 +225,7 @@ $('sentenceList').addEventListener('change',e=>{
 });
 
 // 백업/복원: 이 앱의 학습 관련 데이터만 다루며 다른 사이트의 저장 데이터는 건드리지 않습니다.
-const BACKUP_KEYS=['ilbbang600Records','ilbbang600Start','ilbbang600Checked','ilbbang600Review','ilbbangVoiceRate'];
+const BACKUP_KEYS=['ilbbang600Records','ilbbang600Start','ilbbang600Checked','ilbbang600Review','ilbbangVoiceRate',REWARD_KEY,REDEEM_KEY];
 function collectBackup(){const data={};BACKUP_KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)data[k]=v;});return {app:'ilbbang600',version:1,createdAt:new Date().toISOString(),data};}
 $('exportBackup').onclick=()=>{
  try{const payload=collectBackup();const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`일빵빵_학습기록_백업_${iso(new Date())}.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);$('backupStatus').textContent='백업 파일을 저장했어요. 파일을 안전한 곳에 보관해 주세요.';}
@@ -197,7 +235,7 @@ $('importBackup').onclick=()=>$('backupFile').click();
 $('backupFile').onchange=async e=>{
  const file=e.target.files&&e.target.files[0];if(!file)return;
  try{const obj=JSON.parse(await file.text());if(obj.app!=='ilbbang600'||!obj.data||typeof obj.data!=='object')throw new Error('일빵빵 백업 파일이 아닙니다.');
-  const valid=['ilbbang600Records','ilbbang600Checked','ilbbang600Review'];
+  const valid=['ilbbang600Records','ilbbang600Checked','ilbbang600Review',REWARD_KEY,REDEEM_KEY];
   for(const k of valid){if(obj.data[k]!==undefined){const parsed=JSON.parse(obj.data[k]);if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw new Error('백업 데이터 형식이 올바르지 않습니다.');}}
   if(obj.data.ilbbang600Start!==undefined&&!/^\d{4}-\d{2}-\d{2}$/.test(obj.data.ilbbang600Start))throw new Error('학습 시작일 데이터가 올바르지 않습니다.');
   if(obj.data.ilbbangVoiceRate!==undefined&&(!Number.isFinite(Number(obj.data.ilbbangVoiceRate))||Number(obj.data.ilbbangVoiceRate)<0.5||Number(obj.data.ilbbangVoiceRate)>2))throw new Error('음성 속도 데이터가 올바르지 않습니다.');
@@ -210,6 +248,13 @@ $('backupFile').onchange=async e=>{
  finally{e.target.value='';}
 };
 
+$('rewardOptions').addEventListener('click',e=>{
+ const btn=e.target.closest('[data-reward]');if(!btn)return;const reward=REWARDS.find(r=>r.id===btn.dataset.reward);if(!reward)return;
+ if(availableStars()<reward.cost){$('rewardStatus').textContent='별 포인트가 조금 더 필요해요.';return;}
+ const requests=redeemedRequests(),id=reward.id+'_'+Date.now();requests[id]={rewardId:reward.id,title:reward.title,cost:reward.cost,status:'pending',requestedAt:new Date().toISOString()};writeMap(REDEEM_KEY,requests);renderRewards();
+ $('rewardStatus').textContent=`${reward.title} 보상을 요청했어요! 부모님께 이 화면을 보여드리고 확인받아 주세요.`;
+});
+$('rewardStatus').addEventListener('click',e=>{const btn=e.target.closest('[data-approve]');if(!btn)return;const requests=redeemedRequests(),item=requests[btn.dataset.approve];if(!item||item.status!=='pending')return;if(!confirm('부모님이 실제 보상을 제공했나요? 확인하면 별 포인트가 차감됩니다.'))return;item.status='approved';item.approvedAt=new Date().toISOString();writeMap(REDEEM_KEY,requests);renderRewards();});
 $('sentenceList').addEventListener('click',e=>{
  const recordBtn=e.target.closest('[data-record]');
  if(recordBtn){const no=Number(recordBtn.getAttribute('data-record'));if(activeNo===no)finishRecording();else startRecording(no);return;}
