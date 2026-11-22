@@ -6,7 +6,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fbf8f0">
-<title>일빵빵 1권 전체복습 · 말하기 복습</title>
+<title>일빵빵 1권 전체복습 · 음성 점검 v19</title>
 <style>
 :root{color-scheme:light;--paper:#fbf8f0;--ink:#28251f;--muted:#827b70;--line:#e7dfd2;--accent:#486b55;--soft:#edf3eb}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
@@ -114,7 +114,7 @@ if ('serviceWorker' in navigator) {
  <div class="small" style="margin-top:8px;text-align:center">세 번 실패하면 영어 정답을 확인하고 다시 말할 수 있어요. 정답 확인만으로는 통과하지 않아요. 음성은 저장하지 않습니다.</div>
 </section>
 
-<section class="panel" id="voiceSettingsPanel"><strong style="font-size:14px">🔊 음성 설정</strong><div style="margin-top:10px"><label for="voiceRate">말하기 속도 <span id="rateLabel">0.85배</span></label><input id="voiceRate" type="range" min="0.75" max="1.05" step="0.05" value="0.85" style="width:100%"></div></section>
+<section class="panel" id="voiceSettingsPanel"><strong style="font-size:14px">🔊 음성 설정</strong><div style="margin-top:10px"><label for="voiceRate">영어 듣기 속도 <span id="rateLabel">0.85배</span></label><input id="voiceRate" type="range" min="0.60" max="1.30" step="0.05" value="0.85" style="width:100%"><button type="button" id="testVoiceRate" style="margin-top:12px;padding:10px 14px;border:1px solid #ccc;border-radius:10px;background:#eef5ee">🔊 현재 속도로 시험 듣기</button><p class="small" style="margin-top:7px">이 설정은 영어 듣기 음성 속도만 바꿔요. 녹음·음성인식 속도와는 관계없어요.</p></div></section>
 <section class="panel" id="sentenceStudyPanel"><div class="small" style="margin-bottom:10px">🎙 기존 녹음은 내 목소리 확인용이에요. 복습 통과는 별도의 영어 음성 인식으로 확인합니다.</div><div class="toggle" id="studyViewToggle"><button id="koreanBtn" class="active">한국어 보기</button><button id="englishBtn">영어 보기</button><button id="bothBtn">함께 보기</button></div><div class="filterbar"><button id="showAll" class="active">오늘 30문장</button><button id="showReview">복습할 문장</button><span class="item-count" id="itemCount"></span></div><ol class="list" id="sentenceList"></ol><div class="small" id="emptyReview" style="display:none;padding:18px 0">복습할 문장이 아직 없어요. 헷갈리는 문장에서 ‘복습’ 버튼을 눌러 추가하세요.</div></section>
 <section class="panel" id="studyActionsPanel">
 <div class="actions"><button class="primary" id="markDone">✓ 오늘 학습 완료</button><button id="undoDone">완료 취소</button></div>
@@ -464,13 +464,16 @@ async function finishSpeakingAttempt(){
  if(passes){
   saved[k]={passed:true,percent,transcript:spoken,at:new Date().toISOString()};
   delete attemptMap[k];attemptCount=0;
- }else{
+ }else if(spoken){
   delete saved[k];attemptCount=Math.min(3,attemptCount+1);attemptMap[k]=attemptCount;
  }
+ // 인식 결과가 아예 없는 기술적 실패는 아이의 말하기 실패로 계산하지 않는다.
  writeMap(SPEAKING_PASS_KEY,saved);writeMap(SPEAKING_ATTEMPT_KEY,attemptMap);
- if(!passes&&attemptCount>=3)autoAddFailedSpeakingToReview(no);
+ if(spoken&&!passes&&attemptCount>=3)autoAddFailedSpeakingToReview(no);
  const transcript=spoken?`<br><b>인식 결과:</b> “${escapeHtml(spoken)}”`:`<br>인식된 음성이 없어요.${activeRecognitionError?` (오류: ${escapeHtml(activeRecognitionError)})`:''}`;
- let result=passes
+ let result=!spoken
+  ?`<b>⚠️ 영어 음성인식 결과가 없어요 · 실패 횟수에 포함하지 않았어요.</b>${transcript}<br>녹음 파일이 생성되더라도 음성인식은 별도 기능이에요. Chrome의 마이크 권한과 인터넷 연결을 확인한 뒤 다시 시도해 주세요.`
+  :passes
   ?`<b>✅ 통과 · 일치율 ${percent}%</b>${transcript}<br>이 문장은 말하기 학습을 통과했어요.`
   :attemptCount>=3
    ?`<b>📚 3회 실패 · 일치율 ${percent}%</b>${transcript}<br>복습 목록에 자동 등록했어요. 오늘 복습에서 다시 말해 주세요.`
@@ -1112,6 +1115,7 @@ loadSavedRecordings().finally(()=>render());
 
 // 음성 목록은 브라우저가 비동기로 제공할 수 있어 준비 완료 이벤트도 처리
 if('speechSynthesis' in window){populateVoices();window.speechSynthesis.onvoiceschanged=populateVoices;}
+document.getElementById('testVoiceRate')?.addEventListener('click',()=>speakEnglish('I can speak English. Please listen to me.'));
 document.getElementById('voiceRate')?.addEventListener('input',e=>{document.getElementById('rateLabel').textContent=Number(e.target.value).toFixed(2)+'배';localStorage.setItem('ilbbangWholeVoiceRate',e.target.value)});
 const savedRate=localStorage.getItem('ilbbangWholeVoiceRate');if(savedRate){document.getElementById('voiceRate').value=savedRate;document.getElementById('rateLabel').textContent=Number(savedRate).toFixed(2)+'배';}
 </script><script type="module">
@@ -2179,9 +2183,6 @@ document.addEventListener('keydown',refreshTodayIfChanged,true);
  if(scheme==='content:'||scheme==='file:'||(!window.isSecureContext && scheme!=='https:')){
   el.style.display='block';
   el.innerHTML='<strong>⚠️ 다운로드 파일로 실행 중이에요.</strong><p style="margin:7px 0 0;font-size:13px;line-height:1.6">현재 주소에서는 마이크·음성인식·Firebase 연결이 제한될 수 있어요. 이 파일을 GitHub Pages에 배포한 뒤 <b>https://</b> 주소에서 열어 주세요. 로컬 파일에서 동기화가 되었다고 판단하지 마세요.</p>';
- }else if(scheme==='https:'){
-  el.style.display='block';el.style.background='#eef5ee';el.style.borderColor='#c7dfc9';
-  el.innerHTML='<strong>🔒 HTTPS 실행 환경</strong><p style="margin:6px 0 0;font-size:12px">마이크 권한과 Firebase 로그인 상태는 각각 확인해야 해요. HTTPS라고 해서 동기화 성공이 보장되는 것은 아니에요.</p>';
  }
 })();
 </script>
