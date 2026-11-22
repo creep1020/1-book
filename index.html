@@ -116,7 +116,7 @@ if ('serviceWorker' in navigator) {
 
 <section class="panel" id="voiceSettingsPanel"><strong style="font-size:14px">🔊 음성 설정</strong><div style="margin-top:10px"><label for="voiceRate">영어 듣기 속도 <span id="rateLabel">0.85배</span></label><input id="voiceRate" type="range" min="0.60" max="1.30" step="0.05" value="0.85" style="width:100%"><button type="button" id="testVoiceRate" style="margin-top:12px;padding:10px 14px;border:1px solid #ccc;border-radius:10px;background:#eef5ee">🔊 현재 속도로 시험 듣기</button><p class="small" style="margin-top:7px">이 설정은 영어 듣기 음성 속도만 바꿔요. 녹음·음성인식 속도와는 관계없어요.</p></div></section>
 <section class="panel" id="voiceDiagnosticsV20" style="border:2px solid #c9d9d1">
-<strong>🧪 음성 기능 개별 점검 (v22)</strong>
+<strong>🧪 음성 기능 개별 점검 (v23)</strong>
 <p class="small">기존 녹음·학습 점수와 분리된 점검이에요. 음성인식 테스트는 녹음 파일을 만들지 않고, 녹음 테스트는 여기서 실행하지 않아요.</p>
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0"><button type="button" id="v20TtsTest">🔊 속도 시험 듣기</button><button type="button" id="v20RecTest">🎤 영어 인식만 시험</button><button type="button" id="v20RecStop" disabled>⏹ 인식 종료</button></div>
 <div id="v20VoiceStatus" role="status" aria-live="polite" style="white-space:pre-wrap;background:#f2f5f2;border-radius:12px;padding:12px;font-size:13px;line-height:1.7">점검 대기 중</div>
@@ -370,11 +370,22 @@ function populateVoices(){
  if(!('speechSynthesis' in window))return;
  availableVoices=window.speechSynthesis.getVoices().filter(isEnglishVoice);
 }
-function currentEnglishRate(){
- const el=document.getElementById('voiceRate');
- const raw=Number(el?.value ?? localStorage.getItem('ilbbangWholeVoiceRate') ?? 0.85);
- return Number.isFinite(raw)?Math.min(1.30,Math.max(0.60,raw)):0.85;
-}
+ const VOICE_RATE_STORAGE_KEY='ilbbangWholeVoiceRate';
+ function clampEnglishRate(value){
+  const n=Number(value);
+  return Number.isFinite(n)?Math.min(1.30,Math.max(0.60,Math.round(n*20)/20)):0.85;
+ }
+ // 기기별 TTS 설정은 클라우드 학습 데이터와 별개로 관리한다.
+ let selectedEnglishRate=clampEnglishRate(localStorage.getItem(VOICE_RATE_STORAGE_KEY) ?? 0.85);
+ function currentEnglishRate(){return selectedEnglishRate;}
+ function setEnglishRate(value){
+  selectedEnglishRate=clampEnglishRate(value);
+  const slider=document.getElementById('voiceRate');
+  const label=document.getElementById('rateLabel');
+  if(slider)slider.value=selectedEnglishRate.toFixed(2);
+  if(label)label.textContent=selectedEnglishRate.toFixed(2)+'배';
+  try{localStorage.setItem(VOICE_RATE_STORAGE_KEY,selectedEnglishRate.toFixed(2));}catch(e){}
+ }
 function speakEnglish(text){
  const cleanText=String(text||'').trim();if(!cleanText)return;
  const rate=currentEnglishRate();
@@ -1036,7 +1047,7 @@ $('backupFile').onchange=async e=>{
   const protectedSharedKeys=new Set([REWARD_KEY,REDEEM_KEY,REWARD_SHOP_KEY,KEKE_PROGRESS_KEY]);
   BACKUP_KEYS.forEach(k=>{if(Object.prototype.hasOwnProperty.call(obj.data,k)&&!(sharedWalletConnected&&protectedSharedKeys.has(k)))localStorage.setItem(k,obj.data[k]);});
   $('startDate').value=localStorage.getItem('ilbbangWhole600Start')||iso(today);
-  const rate=localStorage.getItem('ilbbangWholeVoiceRate');if(rate){$('voiceRate').value=rate;$('rateLabel').textContent=Number(rate).toFixed(2)+'배';}
+  setEnglishRate(localStorage.getItem(VOICE_RATE_STORAGE_KEY) ?? selectedEnglishRate);
   previewDay=null;render();$('backupStatus').textContent=sharedWalletConnected?'학습 기록을 복원했어요. 연결된 공통 별·뭉이·보상은 보호하여 변경하지 않았습니다.':'백업 기록을 복원했어요. 학습 달력과 문장 체크를 확인해 보세요.';
  }catch(err){$('backupStatus').textContent='복원 실패: '+err.message;}
  finally{e.target.value='';}
@@ -1124,8 +1135,9 @@ loadSavedRecordings().finally(()=>render());
 // 음성 목록은 브라우저가 비동기로 제공할 수 있어 준비 완료 이벤트도 처리
 if('speechSynthesis' in window){populateVoices();window.speechSynthesis.onvoiceschanged=populateVoices;}
 document.getElementById('testVoiceRate')?.addEventListener('click',()=>speakEnglish('I can speak English. Please listen to me.'));
-document.getElementById('voiceRate')?.addEventListener('input',e=>{document.getElementById('rateLabel').textContent=Number(e.target.value).toFixed(2)+'배';localStorage.setItem('ilbbangWholeVoiceRate',e.target.value)});
-const savedRate=localStorage.getItem('ilbbangWholeVoiceRate');if(savedRate){document.getElementById('voiceRate').value=savedRate;document.getElementById('rateLabel').textContent=Number(savedRate).toFixed(2)+'배';}
+document.getElementById('voiceRate')?.addEventListener('input',e=>setEnglishRate(e.target.value));
+document.getElementById('voiceRate')?.addEventListener('change',e=>setEnglishRate(e.target.value));
+setEnglishRate(selectedEnglishRate);
 </script><script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {
@@ -1228,7 +1240,7 @@ async function registerPushDevice() {
 }
 const CLOUD_KEYS = [
   'ilbbangWhole600Records', 'ilbbangWhole600Start', 'ilbbangWhole600Checked',
-  'ilbbangWhole600Review', REVIEW_SCHEDULE_KEY, DAILY_REVIEW_KEY, REVIEW_RESET_KEY, 'ilbbangWholeVoiceRate',
+  'ilbbangWhole600Review', REVIEW_SCHEDULE_KEY, DAILY_REVIEW_KEY, REVIEW_RESET_KEY,
   'ilbbangWhole600StarAwards', 'ilbbangWhole600RewardRequests', 'ilbbangRewardShopData', 'ilbbangKekeGrowthDays',
   SPEAKING_PASS_KEY, SPEAKING_ATTEMPT_KEY
 ];
@@ -1616,7 +1628,7 @@ function mergeSnapshots(cloudData, localData) {
     }
     merged[DAILY_REVIEW_KEY]=JSON.stringify(daily);
   }
-  for (const key of ['ilbbangWhole600Start','ilbbangWholeVoiceRate']) {
+  for (const key of ['ilbbangWhole600Start']) {
     if (cloudData?.[key] === undefined && localData?.[key] !== undefined) merged[key] = localData[key];
   }
   return merged;
@@ -1630,11 +1642,7 @@ function applySnapshot(data) {
     }
     const start = localStorage.getItem('ilbbangWhole600Start');
     document.getElementById('startDate').value = start || iso(today);
-    const rate = localStorage.getItem('ilbbangWholeVoiceRate');
-    if (rate) {
-      document.getElementById('voiceRate').value = rate;
-      document.getElementById('rateLabel').textContent = Number(rate).toFixed(2) + '배';
-    }
+    // 음성 속도는 기기별 설정: Firebase 스냅샷으로 덮어쓰지 않는다.
   } finally { suppressSync = false; }
   if (typeof window.ilbbangRenderAfterCloudSync === 'function') window.ilbbangRenderAfterCloudSync();
 }
