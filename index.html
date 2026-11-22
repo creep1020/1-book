@@ -115,6 +115,12 @@ if ('serviceWorker' in navigator) {
 </section>
 
 <section class="panel" id="voiceSettingsPanel"><strong style="font-size:14px">🔊 음성 설정</strong><div style="margin-top:10px"><label for="voiceRate">영어 듣기 속도 <span id="rateLabel">0.85배</span></label><input id="voiceRate" type="range" min="0.60" max="1.30" step="0.05" value="0.85" style="width:100%"><button type="button" id="testVoiceRate" style="margin-top:12px;padding:10px 14px;border:1px solid #ccc;border-radius:10px;background:#eef5ee">🔊 현재 속도로 시험 듣기</button><p class="small" style="margin-top:7px">이 설정은 영어 듣기 음성 속도만 바꿔요. 녹음·음성인식 속도와는 관계없어요.</p></div></section>
+<section class="panel" id="voiceDiagnosticsV20" style="border:2px solid #c9d9d1">
+<strong>🧪 음성 기능 개별 점검 (v20)</strong>
+<p class="small">기존 녹음·학습 점수와 분리된 점검이에요. 음성인식 테스트는 녹음 파일을 만들지 않고, 녹음 테스트는 여기서 실행하지 않아요.</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0"><button type="button" id="v20TtsTest">🔊 속도 시험 듣기</button><button type="button" id="v20RecTest">🎤 영어 인식만 시험</button><button type="button" id="v20RecStop" disabled>⏹ 인식 종료</button></div>
+<div id="v20VoiceStatus" role="status" aria-live="polite" style="white-space:pre-wrap;background:#f2f5f2;border-radius:12px;padding:12px;font-size:13px;line-height:1.7">점검 대기 중</div>
+</section>
 <section class="panel" id="sentenceStudyPanel"><div class="small" style="margin-bottom:10px">🎙 기존 녹음은 내 목소리 확인용이에요. 복습 통과는 별도의 영어 음성 인식으로 확인합니다.</div><div class="toggle" id="studyViewToggle"><button id="koreanBtn" class="active">한국어 보기</button><button id="englishBtn">영어 보기</button><button id="bothBtn">함께 보기</button></div><div class="filterbar"><button id="showAll" class="active">오늘 30문장</button><button id="showReview">복습할 문장</button><span class="item-count" id="itemCount"></span></div><ol class="list" id="sentenceList"></ol><div class="small" id="emptyReview" style="display:none;padding:18px 0">복습할 문장이 아직 없어요. 헷갈리는 문장에서 ‘복습’ 버튼을 눌러 추가하세요.</div></section>
 <section class="panel" id="studyActionsPanel">
 <div class="actions"><button class="primary" id="markDone">✓ 오늘 학습 완료</button><button id="undoDone">완료 취소</button></div>
@@ -2184,6 +2190,64 @@ document.addEventListener('keydown',refreshTodayIfChanged,true);
   el.style.display='block';
   el.innerHTML='<strong>⚠️ 다운로드 파일로 실행 중이에요.</strong><p style="margin:7px 0 0;font-size:13px;line-height:1.6">현재 주소에서는 마이크·음성인식·Firebase 연결이 제한될 수 있어요. 이 파일을 GitHub Pages에 배포한 뒤 <b>https://</b> 주소에서 열어 주세요. 로컬 파일에서 동기화가 되었다고 판단하지 마세요.</p>';
  }
+})();
+</script>
+<script id="voiceDiagnosticsV20Script">
+/* 독립적인 음성 점검. 학습/보상/녹음 상태를 변경하지 않음. */
+(function(){
+ const $=id=>document.getElementById(id);
+ const output=$('v20VoiceStatus');
+ if(!output)return;
+ let rec=null;
+ let messages=[];
+ function log(message){messages.push(new Date().toLocaleTimeString('ko-KR')+'  '+message);output.textContent=messages.slice(-12).join('\n');}
+ const rate=$('voiceRate'),label=$('rateLabel');
+ function updateRate(){
+  if(!rate)return;
+  const v=Math.min(1.3,Math.max(.6,Number(rate.value)||.85));
+  if(label)label.textContent=v.toFixed(2)+'배';
+  try{localStorage.setItem('ilbbangWholeVoiceRate',String(v))}catch(e){}
+  log('읽기 속도: '+v.toFixed(2)+'배 (음성인식 속도와 무관)');
+ }
+ if(rate){rate.addEventListener('input',updateRate);rate.addEventListener('change',updateRate);}
+ $('v20TtsTest')?.addEventListener('click',()=>{
+  const v=Number(rate?.value)||.85;
+  if(!('speechSynthesis' in window)){log('TTS API 지원 안 됨');return;}
+  try{
+   window.speechSynthesis.cancel();
+   const u=new SpeechSynthesisUtterance('I can speak English. Please listen to me.');
+   u.lang='en-US';u.rate=v;
+   u.onstart=()=>log('TTS 재생 시작 · '+v.toFixed(2)+'배');
+   u.onend=()=>log('TTS 재생 완료');
+   u.onerror=e=>log('TTS 오류: '+(e.error||'unknown'));
+   window.speechSynthesis.speak(u);
+   log('TTS 재생 요청 · '+v.toFixed(2)+'배 · 음성 목록 '+window.speechSynthesis.getVoices().length+'개');
+  }catch(e){log('TTS 예외: '+e.name+' '+e.message)}
+ });
+ const start=$('v20RecTest'),stop=$('v20RecStop');
+ start?.addEventListener('click',()=>{
+  if(rec){log('이미 점검 중');return;}
+  const Recognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!Recognition){log('이 브라우저는 SpeechRecognition API를 제공하지 않음');return;}
+  try{
+   const r=new Recognition();rec=r;
+   r.lang='en-US';r.continuous=false;r.interimResults=true;r.maxAlternatives=1;
+   start.disabled=true;stop.disabled=false;
+   r.onstart=()=>log('영어 음성인식 시작 · 영어로 I can speak English라고 말해 보세요');
+   r.onaudiostart=()=>log('음성 입력 감지 시작');
+   r.onspeechstart=()=>log('말소리 감지');
+   r.onresult=e=>{
+    const lines=[];
+    for(let i=0;i<e.results.length;i++)lines.push((e.results[i].isFinal?'최종':'중간')+': '+(e.results[i][0]?.transcript||''));
+    log('인식 결과 · '+lines.join(' / '));
+   };
+   r.onerror=e=>log('인식 오류: '+(e.error||'unknown')+(e.message?' · '+e.message:''));
+   r.onend=()=>{log('음성인식 종료');rec=null;start.disabled=false;stop.disabled=true;};
+   r.start();log('인식 요청 전송 (녹음기 사용하지 않음)');
+  }catch(e){rec=null;start.disabled=false;stop.disabled=true;log('인식 시작 예외: '+e.name+' '+e.message);}
+ });
+ stop?.addEventListener('click',()=>{try{rec?.stop();log('종료 요청')}catch(e){log('종료 오류: '+e.message)}});
+ log('브라우저: '+(window.isSecureContext?'보안 컨텍스트':'비보안 컨텍스트')+' / SpeechRecognition: '+(!!(window.SpeechRecognition||window.webkitSpeechRecognition))+' / MediaRecorder: '+(!!window.MediaRecorder));
 })();
 </script>
 </body></html>
