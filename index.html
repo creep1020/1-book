@@ -139,7 +139,7 @@ if ('serviceWorker' in navigator) {
  <div class="keke-stage-dots" id="kekeStageDots"><span>●</span><span>○</span><span>○</span><span>○</span><span>○</span><span>○</span></div>
 </div>
 <div class="reward-stats">
- <div class="reward-main"><div class="small">사용 가능한 별 포인트</div><div class="reward-number"><span id="starBalance">0</span> ⭐</div><div class="small" id="starNote">오늘 학습을 완료하면 별 1개를 받을 수 있어요.</div></div>
+ <div class="reward-main"><div class="small">사용 가능한 별 포인트</div><div class="reward-number"><span id="starBalance">0</span> <span id="reviewRewardIcon">⭐</span></div><div class="small" id="starNote">오늘 학습을 완료하면 별 1개를 받을 수 있어요.</div></div>
  <div class="reward-streak"><div class="small">연속 학습</div><div class="streak-number">🔥 <span id="streakCount">0</span>일</div><div class="small" id="streakNote">하루씩 꾸준히 이어가 봐요!</div></div>
 </div>
 <div class="badge-title">획득한 배지</div><div class="badge-list" id="badgeList"></div>
@@ -2265,4 +2265,36 @@ let last='', preview='';function update(){const p=$('profileSelect'),old=$('keke
 const name=p.selectedOptions[0]?.textContent.trim(),group=groups[name==='지우'?'뀨':name],key='ilbbangReviewCharacter:'+p.value,sel=$('reviewCharacterSelect'),btn=$('reviewCharacterConfirm'),img=$('reviewCharacterImage'),heading=g.querySelector('.keke-growth-head strong');if(!group){box.style.display='none';old.style.display='';if(last&&heading)heading.textContent='🐭 뭉이의 30일 성장 모험';last='';return;}box.style.display='block';old.style.display='none';const saved=localStorage.getItem(key),valid=group.items.some(x=>x[0]===saved),parent=window.ilbbangIsParentSettingsUnlocked?.()===true;if(last!==key){last=key;sel.replaceChildren(...group.items.map(x=>new Option(x[1],x[0])));preview=valid?saved:group.items[0][0];}if(valid&&!parent)preview=saved;sel.value=preview;sel.style.display=(!valid||parent)?'block':'none';btn.style.display=(!valid||parent)?'block':'none';btn.textContent=valid?'캐릭터 변경':'이 캐릭터로 시작하기';const n=Math.max(1,Math.min(6,parseInt($('kekeStagePill')?.textContent)||1));const path=group.path(preview,n);if(img.getAttribute('src')!==path)img.setAttribute('src',path);if(heading)heading.textContent=group.title;$('reviewCharacterStatus').textContent=group.items.find(x=>x[0]===preview)[1]+' · '+n+'단계';}
 function init(){update();setInterval(update,500);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();
 </script>
-</body></html>
+<script>
+// Profile-specific reward presentation only; no changes to wallet data.
+(()=>{
+ const refresh=()=>{
+  const select=document.getElementById('profileSelect');
+  const panel=document.getElementById('rewardPanel');
+  if(!select||!panel)return;
+  const football=/민\s*서/.test((select.selectedOptions[0]?.textContent||'').normalize('NFKC'));
+  const icon=document.getElementById('reviewRewardIcon');
+  if(icon&&icon.textContent!==(football?'⚽':'⭐'))icon.textContent=football?'⚽':'⭐';
+  const walker=document.createTreeWalker(panel,NodeFilter.SHOW_TEXT);
+  let node;
+  while((node=walker.nextNode())){
+   if(node.parentElement?.closest('#reviewCharacterPanel,.keke-growth-head,#kekeStageName,#kekeGrowthCaption,select,textarea,script,style,#badgeList,#reviewRewardIcon'))continue;
+   const before=node.nodeValue;
+   const after=football?before.replace(/별(?!도|명|개로)/g,'축구공').replace(/⭐/g,'⚽'):before.replace(/축구공/g,'별').replace(/⚽/g,'⭐');
+   if(after!==before)node.nodeValue=after;
+  }
+ };
+ const init=()=>{
+  const panel=document.getElementById('rewardPanel');
+  if(!panel)return;
+  const observer=new MutationObserver(refresh);
+  observer.observe(panel,{subtree:true,childList:true,characterData:true});
+  const profile=document.getElementById('profileSelect');
+  if(profile)observer.observe(profile,{subtree:true,childList:true,characterData:true,attributes:true});
+  document.getElementById('profileSelect')?.addEventListener('change',refresh);
+  setInterval(refresh,250);refresh();
+ };
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+<div style="text-align:center;font-size:10px;opacity:.6;padding:8px">복습 v31</div></body></html>
