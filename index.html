@@ -6,7 +6,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fbf8f0">
-<title>일빵빵 1권 전체복습 · 음성 점검 v19</title>
+<title>일빵빵1복습</title>
 <style>
 :root{color-scheme:light;--paper:#fbf8f0;--ink:#28251f;--muted:#827b70;--line:#e7dfd2;--accent:#486b55;--soft:#edf3eb}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
@@ -75,8 +75,8 @@ button{cursor:pointer}button:disabled{opacity:.4;cursor:default}.primary{backgro
 /* Keep language selector visible while scrolling the sentence list. */
 #studyViewToggle{position:sticky;top:0;z-index:20;padding:10px 0;background:#fff;margin:4px 0 12px;border-bottom:1px solid var(--line)}
 #studyViewToggle button{font-size:14px;font-weight:750;min-width:0;padding:11px 5px}
-</style><style id="hideVoiceDevPanelsV25">#voiceSettingsPanel,#voiceDiagnosticsV20{display:none !important;}</style>
-</head>
+</style><style id="hideVoiceDevPanelsV25">#environmentNotice,#voiceSettingsPanel,#voiceDiagnosticsV20{display:none !important;}</style>
+<meta name="apple-mobile-web-app-title" content="일빵빵1복습"><link rel="icon" href="./icon-192.png?v=27"><link rel="apple-touch-icon" href="./icon-192.png?v=27"></head>
  <script>
 if ('serviceWorker' in navigator) {
   let appRefreshing = false;
@@ -95,7 +95,7 @@ if ('serviceWorker' in navigator) {
  </script>
 <body><main>
 <header><div><div class="kicker">ILPPANGPPANG · BASIC ENGLISH</div><strong>매일 30문장, 20일 완성</strong></div><div class="day" id="dayBadge">DAY 1 / 20</div></header>
-<h1>1권 전체복습</h1><p class="sub" id="dateLabel"></p>
+<h1>일빵빵1복습</h1><p class="sub" id="dateLabel"></p>
 <section id="environmentNotice" class="panel" style="display:none;border-color:#dfad6d;background:#fff8ed" role="status" aria-live="polite"></section>
 <section class="panel" id="dayControlsPanel">
 <div class="controls"><label for="startDate">학습 시작일</label><input type="date" id="startDate"><button id="apply">적용</button><button id="today">오늘의 DAY</button></div>
@@ -377,10 +377,10 @@ function populateVoices(){
   return Number.isFinite(n)?Math.min(1.30,Math.max(0.60,Math.round(n*20)/20)):0.85;
  }
  // 기기별 TTS 설정은 클라우드 학습 데이터와 별개로 관리한다.
- let selectedEnglishRate=clampEnglishRate(localStorage.getItem(VOICE_RATE_STORAGE_KEY) ?? 0.85);
- function currentEnglishRate(){return selectedEnglishRate;}
+ let selectedEnglishRate=0.85;
+ function currentEnglishRate(){return 0.85;}
  function setEnglishRate(value){
-  selectedEnglishRate=clampEnglishRate(value);
+  selectedEnglishRate=0.85;
   const slider=document.getElementById('voiceRate');
   const label=document.getElementById('rateLabel');
   if(slider)slider.value=String(selectedEnglishRate);
